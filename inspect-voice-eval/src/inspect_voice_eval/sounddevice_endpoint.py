@@ -6,7 +6,7 @@ from typing import Any, cast
 import anyio
 
 from .audio_endpoint import RecordingResult
-from .recording import recording_from_audio
+from .recording import SpeechRecorded, SpeechStopState
 from .speech_detection import VoiceActivityDetector
 from .wave_data import WaveData
 
@@ -46,17 +46,13 @@ class SounddeviceAudioEndpoint:
         max_recording_ms: int,
     ) -> RecordingResult:
         """Record from the selected input device until VAD stops."""
-        audio = await anyio.to_thread.run_sync(
-            self._record_sync,
-            max_recording_ms,
-        )
-        return recording_from_audio(
-            audio,
+        return await anyio.to_thread.run_sync(
+            self._record_until_sync,
             detector,
-            frame_duration_ms=frame_duration_ms,
-            end_silence_ms=end_silence_ms,
-            min_speech_ms=min_speech_ms,
-            max_recording_ms=max_recording_ms,
+            frame_duration_ms,
+            end_silence_ms,
+            min_speech_ms,
+            max_recording_ms,
         )
 
     def _play_sync(self, audio: WaveData) -> None:
@@ -73,21 +69,40 @@ class SounddeviceAudioEndpoint:
             blocking=True,
         )
 
-    def _record_sync(self, max_recording_ms: int) -> WaveData:
+    def _record_until_sync(
+        self,
+        detector: VoiceActivityDetector,
+        frame_duration_ms: int,
+        end_silence_ms: int,
+        min_speech_ms: int,
+        max_recording_ms: int,
+    ) -> RecordingResult:
         import numpy as np
 
         sd = cast(Any, import_module("sounddevice"))
-        frame_count = round(self.sample_rate_hz * max_recording_ms / 1000)
-        samples = sd.rec(
-            frame_count,
+        frames_per_chunk = round(self.sample_rate_hz * frame_duration_ms / 1000)
+        stop_state = SpeechStopState(
+            detector=detector,
+            end_silence_ms=end_silence_ms,
+            min_speech_ms=min_speech_ms,
+        )
+        elapsed_ms = 0
+        with sd.InputStream(
             samplerate=self.sample_rate_hz,
             channels=self.channel_count,
             dtype="int16",
             device=self.input_device,
-            blocking=True,
-        )
-        return WaveData(
-            pcm=np.asarray(samples, dtype=np.int16).tobytes(),
-            sample_rate_hz=self.sample_rate_hz,
-            channel_count=self.channel_count,
-        )
+            blocksize=frames_per_chunk,
+        ) as stream:
+            while elapsed_ms < max_recording_ms:
+                samples, _ = stream.read(frames_per_chunk)
+                frame = WaveData(
+                    pcm=np.asarray(samples, dtype=np.int16).tobytes(),
+                    sample_rate_hz=self.sample_rate_hz,
+                    channel_count=self.channel_count,
+                )
+                progress = stop_state.accept(elapsed_ms, frame)
+                if isinstance(progress, SpeechRecorded):
+                    return progress.recording
+                elapsed_ms += frame.duration_ms
+        raise stop_state.timeout()
