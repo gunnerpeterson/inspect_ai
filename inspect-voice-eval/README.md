@@ -18,6 +18,9 @@ Install only the real backends you need:
 pip install inspect-voice-eval[sounddevice]
 pip install inspect-voice-eval[chatterbox]
 pip install inspect-voice-eval[faster-whisper]
+pip install inspect-voice-eval[kokoro]
+pip install inspect-voice-eval[mlx-whisper]
+pip install inspect-voice-eval[piper]
 ```
 
 ## Minimal fake-backend task
@@ -39,6 +42,64 @@ def voice_smoke():
 ```
 
 The default solver dependencies are fake and deterministic so CI does not need audio devices or model downloads.
+
+## Explicit local ASR backend selection
+
+Use `faster-whisper` for portable CPU/CUDA transcription:
+
+```python
+from inspect_voice_eval import FasterWhisperSpeechTranscriber, voice_turn
+
+solver = voice_turn(
+    transcriber=FasterWhisperSpeechTranscriber(model_size="medium"),
+)
+```
+
+Use `mlx-whisper` for Apple Silicon GPU transcription:
+
+```python
+from inspect_voice_eval import MlxWhisperSpeechTranscriber, voice_turn
+
+solver = voice_turn(
+    transcriber=MlxWhisperSpeechTranscriber(
+        model_repo="mlx-community/whisper-medium",
+    ),
+)
+```
+
+Backend selection is explicit so runs remain reproducible across machines.
+
+## Explicit local TTS backend selection
+
+Use Chatterbox for expressive reference-speaker prompts:
+
+```python
+from inspect_voice_eval import ChatterboxSpeechSynthesizer, voice_turn
+
+solver = voice_turn(
+    synthesizer=ChatterboxSpeechSynthesizer(),
+)
+```
+
+Use Kokoro for faster local prompts with named voices:
+
+```python
+from inspect_voice_eval import KokoroSpeechSynthesizer, voice_turn
+
+solver = voice_turn(
+    synthesizer=KokoroSpeechSynthesizer(voice_id="af_heart"),
+)
+```
+
+Use Piper for the fastest local prompts with named voices:
+
+```python
+from inspect_voice_eval import PiperSpeechSynthesizer, voice_turn
+
+solver = voice_turn(
+    synthesizer=PiperSpeechSynthesizer(voice_id="en_US-lessac-medium"),
+)
+```
 
 ## Real audio routing
 

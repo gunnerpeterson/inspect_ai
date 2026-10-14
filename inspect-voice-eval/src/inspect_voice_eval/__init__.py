@@ -4,6 +4,9 @@ from .energy_speech_detection import EnergyVoiceActivityDetector
 from .fake_audio_endpoint import FakeAudioEndpoint
 from .fake_speech import FakeSpeechSynthesizer, FakeSpeechTranscriber
 from .faster_whisper_speech import FasterWhisperSpeechTranscriber
+from .kokoro_speech import KokoroSpeechSynthesizer
+from .mlx_whisper_speech import MlxWhisperSpeechTranscriber
+from .piper_speech import PiperSpeechSynthesizer
 from .sounddevice_endpoint import SounddeviceAudioEndpoint
 from .speech_synthesis import (
     SpeechSynthesizer,
@@ -22,6 +25,9 @@ __all__ = [
     "FakeSpeechSynthesizer",
     "FakeSpeechTranscriber",
     "FasterWhisperSpeechTranscriber",
+    "KokoroSpeechSynthesizer",
+    "MlxWhisperSpeechTranscriber",
+    "PiperSpeechSynthesizer",
     "RecordingResult",
     "SounddeviceAudioEndpoint",
     "SpeechSynthesizer",
