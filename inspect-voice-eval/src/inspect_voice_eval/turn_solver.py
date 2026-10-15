@@ -41,9 +41,9 @@ VoiceActivityDetectorSource = (
 def _default_response_audio() -> WaveData:
     return WaveData.concatenate(
         [
-            WaveData.silence(100),
+            WaveData.silence(90),
             WaveData.tone(300),
-            WaveData.silence(300),
+            WaveData.silence(900),
         ]
     )
 
@@ -73,9 +73,9 @@ class VoiceTurnTimingSettings:
     """Timing settings for one voice turn."""
 
     frame_duration_ms: int = 30
-    end_silence_ms: int = 240
+    end_silence_ms: int = 800
     min_speech_ms: int = 120
-    max_recording_ms: int = 10_000
+    max_recording_ms: int = 120_000
     synthesis_timeout_ms: int = 30_000
     playback_timeout_ms: int = 30_000
     transcription_timeout_ms: int = 30_000

@@ -16,7 +16,7 @@ from inspect_voice_eval.log_attachment_refs import attachment_ref_for_text
 def test_log_artifact_refs_match_written_eval_log_attachments(tmp_path) -> None:
     prompt_audio = WaveData.tone(180)
     response_audio = WaveData.concatenate(
-        [WaveData.silence(90), WaveData.tone(300), WaveData.silence(300)]
+        [WaveData.silence(90), WaveData.tone(300), WaveData.silence(900)]
     )
     recorded_audio = response_audio.slice(90, 390)
     task = Task(

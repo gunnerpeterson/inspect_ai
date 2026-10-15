@@ -18,7 +18,7 @@ from inspect_voice_eval.speech_synthesis import reject_unsupported_controls
 
 def response_audio() -> WaveData:
     return WaveData.concatenate(
-        [WaveData.silence(90), WaveData.tone(300), WaveData.silence(300)]
+        [WaveData.silence(90), WaveData.tone(300), WaveData.silence(900)]
     )
 
 
